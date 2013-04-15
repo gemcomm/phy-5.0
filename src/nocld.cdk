@@ -20,5 +20,5 @@
 *
        REAL TOPC, MINQ
        SAVE TOPC, MINQ
-       DATA TOPC, MINQ / 100., 1.0E-06 /
+       DATA TOPC, MINQ / 500., 1.0E-06 /
 *

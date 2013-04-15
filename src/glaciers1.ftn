@@ -53,6 +53,7 @@
 *                                      Nouvelle formule pour Z0H
 * 013      M. Desgane (Apr 2009) - Remove coupling block
 * 014      J. Toviessi (Jul 2009) - added radslope modifications
+* 015      A. Zadra (Avr 2011) - Cap Z0H at 0.2 m (consistency with soili of isba)
 *
 *Object
 *          Calculate the surface temperature (and specific humidity) and
@@ -345,6 +346,7 @@
 *
 
         Z0H(I) = MAX(   0.2 * Z0M(I)  ,  Z0GLA   )
+        Z0H(I) = MIN(    Z0H(I)  ,  0.2   )
 
 *
         VMOD  (I) = SQRT( MAX( VAMIN,(UU(I)**2 + VV(I)**2)))

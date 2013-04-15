@@ -13,17 +13,18 @@
 !if not, you can write to: EC-RPN COMM Group, 2121 TransCanada, suite 500, Dorval (Quebec), 
 !CANADA, H9P 1J3; or send e-mail to service.rpn@ec.gc.ca
 !-------------------------------------- LICENCE END --------------------------------------
-*** S/P  DIASURF
+*** S/P  DIASURF2
 *
 #include "phy_macros_f.h"
-      SUBROUTINE DIASURF2(UZ,VZ,TZ,QZ,NI,U,V,TG,QG,Z0,Z0T,ILMO,ZA,
-     1                  H,UE,FTEMP,FVAP,ZU,ZT,LAT)
+      subroutine diasurf2(uz,vz,tz,qz,ni,u,v,tg,qg,z0,z0t,ilmo,za, 
+     +                    h,ue,ftemp,fvap,zu,zt,lat)
 #include "impnone.cdk"
-      INTEGER NI
-      REAL ZT(NI),ZU(NI)
-      REAL UZ(NI),VZ(NI),TZ(NI),QZ(NI),ZA(NI),U(NI),V(NI)
-      REAL TG(NI),QG(NI),UE(NI),FTEMP(NI),FVAP(NI)
-      REAL LAT(NI),ILMO(NI),Z0T(NI),Z0(NI),H(NI)
+      integer ni
+      real zt(ni),zu(ni)
+      real uz(ni),vz(ni),tz(ni),qz(ni),za(ni),u(ni),v(ni)
+      real tg(ni),qg(ni),ue(ni),ftemp(ni),fvap(ni)
+      real lat(ni),ilmo(ni),z0t(ni),z0(ni),h(ni)
+*
 *Author
 *          Yves Delage  (Aug1990)
 *
@@ -42,6 +43,8 @@
 *             - Put stability functions into local functions via stabfunc.cdk
 * 009      R. McTaggart-Cowan and B. Bilodeau (May 2006)
 *             - Clean up stabfunc.cdk
+* 010      A. Zadra (Apr 11) - clean up, simplify and add comments
+* 011      A. Zadra (Sep 11) - convert to fortran 90
 *
 *Object
 *          to calculate the diagnostic values of U, V, T, Q
@@ -50,99 +53,123 @@
 *Arguments
 *
 *          - Output -
-* UZ       U component of the wind at Z=ZU
-* VZ       V component of the wind at Z=ZU
-* TZ       temperature in kelvins at Z=ZT
-* QZ       specific humidity at Z=ZT
+* uz       U component of the wind at z=zu
+* vz       V component of the wind at z=zu
+* tz       temperature in kelvins at z=zt
+* qz       specific humidity at z=zt
 *
 *          - Input -
-* NI       number of points to process
-* U        U component of wind at Z=ZA
-* V        V component of wind at Z=ZA
-* TG       temperature at the surface (Z=0) in Kelvins
-* QG       specific humidity
-* PS       surface pressure at the surface
-* ILMO     inverse of MONIN-OBUKHOV lenth
-* H        height of boundary layer
-* UE       friction velocity
-* Z0       roughness lenth for winds
-* Z0T      roughness lenth for temperature and moisture
-* FTEMP    temperature flux at surface
-* FVAP     vapor flux at surface
-* ZA       heights of first model level above ground
-* ZU       heights for computation of wind components
-* ZT       heights for computation of temperature and moisture
-* LAT      LATITUDE
-*
-      REAL ANG,ANGI,VITS
-      REAL CT,DANG,CM
-      REAL FH,FM,HI,XX,XX0,YY,YY0
-      INTEGER J
+* ni       number of points to process
+* u        U component of wind at z=za
+* v        V component of wind at z=za
+* tg       temperature at the surface (z=0) in Kelvins
+* qg       specific humidity
+* ps       surface pressure at the surface
+* ilmo     inverse of Monin-Obukhov lenth
+* h        height of boundary layer
+* ue       friction velocity
+* z0       roughness lenth for winds
+* z0t      roughness lenth for temperature and moisture
+* ftemp    temperature flux at surface
+* fvap     vapor flux at surface
+* za       heights of first model level above ground
+* zu       heights for computation of wind components
+* zt       heights for computation of temperature and moisture
+* lat      latitude
 *
 *
-*******************************************************
-*     AUTOMATIC ARRAYS
-*******************************************************
-*
-      AUTOMATIC ( LZZ0T , REAL , (NI) )
-      AUTOMATIC ( LZZ0  , REAL , (NI) )
-*
-*******************************************************
-
-*Implicites
 #include "surfcon.cdk"
 #include "consphy.cdk"
 *
-*MODULES
-
-      DO J=1,NI
-       LZZ0T(J)=ZT(J)/Z0T(J)+1       
-       LZZ0 (J)=ZU(J)/Z0(J)+1       
-      ENDDO
 *
-      call vslog(LZZ0T,LZZ0T,NI)
-      call vslog(LZZ0 ,LZZ0 ,NI)
 *
-      DO 10 J=1,NI
-      IF(ILMO(J).LE.0.) THEN
-*---------------------------------------------------------------------
-*                      UNSTABLE CASE
+      integer j
+      real fh,fm,x0,x1,y0,y1,h1,h2,h3,hh
+      real ct,ctu,cm,vits
+      real angi,dang,ang,hi
 *
-           hi=0.
-*CDIR IEXPAND
-           fh=fhi(ZT(J)+Z0T(J),Z0T(j),LZZ0T(J),ILMO(J),YY,YY0)
-*CDIR IEXPAND
-           fm=fmi(ZU(J)+Z0 (J),Z0 (J),LZZ0(J) ,ILMO(J),XX,XX0)
-      ELSE
-*---------------------------------------------------------------------
-*                        STABLE CASE
-         hi=1/MAX(HMIN,H(J),(ZA(J)+10*Z0(J))*factn,factn/
-     1        (4*AS*BETA*ilmo(j)))
-*CDIR IEXPAND
-         fh=BETA*(LZZ0T(J)+min(psi(ZT(J)+Z0T(J),HI,ILMO(J))-psi(Z0T(J),HI,ILMO(J)),
-     1                        ASX*ILMO(J)*ZT(J)))
-*CDIR IEXPAND
-         fm=LZZ0(J)+min(psi(zu(J)+Z0(J),HI,ILMO(J))-psi(Z0(J),HI,ILMO(J)),
-     1                 ASX*ILMO(J)*ZU(J))
-      ENDIF
-*---------------------------------------------------------------------
-      CT=KARMAN/FH
-      CM=KARMAN/FM
-      TZ(J)=TG(J)-FTEMP(J)/(CT*UE(J))-GRAV/CPD*ZT(J)
-      QZ(J)=QG(J)-FVAP(J)/(CT*UE(J))
-      VITS=UE(J)/CM
-
-* CALCULATE WIND DIRECTION CHANGE FROM TOP OF SURFACE LAYER
-      DANG= (ZA(J)-ZU(J))*HI*ANGMAX*SIN(LAT(J))
-      ANGI=ATAN2(V(J),SIGN(ABS(U(J))+1.e-05,U(J)))
-!
-      ANG=ANGI+DANG
+      AUTOMATIC ( lzz0t , REAL , (ni) )
+      AUTOMATIC ( lzz0  , REAL , (ni) )
 *
-      UZ(J)=VITS*COS(ANG)
-      VZ(J)=VITS*SIN(ANG)
-   10 CONTINUE
+*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*     STEP 1: Initialize neutral stability functions (lzz0 and lzz0t)
 *
-      RETURN
-      CONTAINS
-#include "stabfunc2.cdk"
-      END
+      do j=1,ni
+       lzz0 (j) = 1+zu(j)/z0(j)
+       lzz0t(j) = 1+zt(j)/z0t(j)
+      enddo
+      call vslog(lzz0t,lzz0t,ni)
+      call vslog(lzz0 ,lzz0 ,ni)
+*
+*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+*    STEP 2: Compute diagnostic fields, given the fluxes (ftemp,fvap,ue):
+*
+*     (a) for tz and qz, this is done by reversing the flux equations
+*       ftemp = -ctu*((tz + g*zt/cp) - tg) ==> tz = tg - ftemp/ctu - g*zt/cp
+*       fvap  = -ctu*( qz            - qg) ==> qz = qg - fvap /ctu
+*
+*     (b) for vits, this is done reversing the friction velocity equation 
+*       ue = cm*vits ==> vits = ue/cm
+*
+      do j=1,ni
+*
+*---- integrated stability functions and transfer coefficients
+*     for the diagnostic layers
+        if ( ilmo(j).gt.0.) then
+          h1    = (za(j)+10.*z0(j))*factn
+          h2    = h(j)
+          h3    = factn/(4*as*beta*ilmo(j))
+          hh  = MAX(hmin,h1,h2,h3)
+        else
+          hh  =  h(j)
+        endif
+*
+        fm    =        lzz0 (j) 
+     +        + nfm(zu(j)+z0 (j),ilmo(j),hh,x1) 
+     +        - nfm(      z0 (j),ilmo(j),hh,x0)
+        fh    = beta*( lzz0t(j) 
+     +        + nfh(zt(j)+z0t(j),ilmo(j),hh,y1) 
+     +        - nfh(      z0t(j),ilmo(j),hh,y0))
+        ct    = karman/fh
+        cm    = karman/fm
+*
+*---- diagnostic temperature tz and specific humidity qz
+*
+        ctu   = ct*ue(j)
+        tz(j) = tg(j) - ftemp(j)/ctu - grav/cpd*zt(j)
+        qz(j) = qg(j) - fvap (j)/ctu
+*
+*---- diagnostic wind speed
+*
+        vits  = ue(j)/cm
+*
+*---- diagnostic wind components
+*     Note: We assume that the wind direction changes in the 
+*           stable layer only, according to the formula
+*             (ang2-ang1)/ang_max = - (z2-z1)/h * sin(lat)
+*
+*     (1) angle at input level za (angi)
+        angi = ATAN2( v(j), SIGN( ABS(u(j)) + 1.e-05, u(j)) )
+*
+*     (2) angle difference between levels zu and za (dang)
+        if (ilmo(j).gt.0.) then
+          hi = 1./MAX(hmin,hh)
+        else
+          hi = 0.
+        endif
+        dang = (za(j)-zu(j)) * hi * angmax * SIN(lat(j))
+*
+*     (3) angle at diagnostic level zu
+        ang = angi + dang
+*
+*     (4) wind components at diagnostic level zu
+        uz(j) = vits*COS(ang)
+        vz(j) = vits*SIN(ang)
+*
+      enddo
+*
+*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      return
+      contains
+#include "stabfunc3.cdk"
+      end

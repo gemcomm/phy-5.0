@@ -43,7 +43,8 @@
 *
 *Revisions
 *
-* 001
+* 001    P.Vaillancourt, A.Plante (Feb 12) : maxc=max(maxc,lev1) ; necessary if cloud may occur close to 1mb
+*                                            this problem can also be avoided through pressure threshold in nocld.cdk 
 *
 *Object  
 *

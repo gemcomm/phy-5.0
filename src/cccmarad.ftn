@@ -47,6 +47,7 @@
 *                                 - move cldoppro3 out of radiation loop, to be called every timestep
 *                                 - FSD,FSF,FSI,FSV,and PARR corrected for sw variation between rad timesteps
 *                                 - allow output of FSD,FSF,FSI,FSV,PARR,ECC,ECCL,ECCM,ECCH, and TCC as timeseries
+* 011    P. Vaillancourt (Feb 12) - assume temperature is isothermal above model top 
 *         
 *
 *Object
@@ -276,7 +277,12 @@ c
         do i = 1, n
            s_qrt(i,1) = sig(i,1) / sig(i,2)
            s_qrt(i,nkp) = 1.0
-           tfull(i,1) = 0.5 * (3.0 * tt(i,1) - tt(i,2))
+c The following line extrapolates the temperature above model top for moon layer temperature
+c           tfull(i,1) = 0.5 * (3.0 * tt(i,1) - tt(i,2))
+c The following line assumes temperature is isothermal above model top
+c This assumption must also be imposed in raddriv (see calc of a1(i,5) and planck subroutines
+           tfull(i,1) =  tt(i,1)
+
            tfull(i,nkp) = tt(i,nk+1)
 c           tfull(i,nkp) = f(tsrad+i-1) 
 c          tfull(i,nkp) : choose either ground temperature or 2m temperature (does have an impact)

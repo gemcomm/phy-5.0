@@ -89,6 +89,8 @@
 * 047      L. Spacek   (Sep 2008) - added icelac
 * 048      A-M. Leduc  (Feb 2009) - add KFCTRIGLAT, KFCTRIGL and TRIGLAT 
 * 049      J. Toviessi (July 2009) - added radslope modifications
+* 050      R. McTaggart-Cowan (Jan 2012) - add PBL_RICRIT for turbulent hysteresis
+* 051      P. Vaillancourt (Mar 2012) - add SALTY_QSAT for salinity effect on calculation of qsat
 *
 *Object
 *          Initialize/Extract physics comdeck OPTIONS
@@ -662,6 +664,12 @@
             WRITE(6,'(/A,L2)') 'PHYSICS OPTION OFFLINE = ',OFFLINE
          ENDIF
 *
+      ELSE IF (NOMC.EQ.'OFFLINE_ADAPT')           THEN
+*
+         IF      (MODEC.EQ.'GET')                 THEN
+            VALEURL(1) = OFFLINE_ADAPT
+         ENDIF
+*
       ELSE IF (NOMC.EQ.'RADFIX')                  THEN
 *
          IF (MODEC.EQ.'GET')                      THEN
@@ -680,10 +688,22 @@
             VALEURL(1) = RADSLOPE
          ENDIF
 *
+      ELSE IF (NOMC.EQ.'Z0TRDPS300')                  THEN
+*
+         IF (MODEC.EQ.'GET')                      THEN
+            VALEURL(1) = Z0TRDPS300
+         ENDIF
+*
       ELSE IF (NOMC.EQ.'TS_FLXIR')                THEN
 *
          IF (MODEC.EQ.'GET')                      THEN
             VALEURL(1) = TS_FLXIR
+         ENDIF
+*
+      ELSE IF (NOMC.EQ.'SALTY_QSAT')                  THEN
+*
+         IF (MODEC.EQ.'GET')                      THEN
+            VALEURL(1) = SALTY_QSAT
          ENDIF
 *
 *
@@ -1003,6 +1023,14 @@
             END DO
          ENDIF
 *
+      ELSE IF (NOMC.EQ.'PBL_RICRIT')             THEN
+*
+         IF (MODEC.EQ.'GET')                     THEN
+            DO I=1,NV
+               VALEURR(I) = PBL_RICRIT(I)
+            END DO
+         ENDIF
+*
       ELSE IF (NOMC.EQ.'QCO2')                   THEN
 *
          IF (MODEC.EQ.'GET')                     THEN
@@ -1319,10 +1347,12 @@
       DATA MOYHR           /0/
       DATA NON_ORO         /.FALSE./
       DATA NSLOFLUX        /0/
+      DATA OFFLINE_ADAPT   /.FALSE./
       DATA OWFLUX          /.FALSE./
       DATA OZONE_FILE_S    /'NIL'/
       DATA PARSOL          /2.3E+06, 1.0E+06, 2.0E+06, 0.5E-06, \
                             0.6E-06, 1.1E-06/
+      DATA PBL_RICRIT      /1.,1./
       DATA PCPTYPE         /'NIL'/
       DATA PHY_PCK_VERSION /'@#$%'/
       DATA QCFC11          /0.280/
@@ -1337,6 +1367,7 @@
       DATA RADNIVL         /LEVMAX * 0, 0/
       DATA RADSLOPE        /.FALSE./
       DATA RMSCON          /1.0/
+      DATA SALTY_QSAT      /.FALSE./
       DATA SATUCO          /.TRUE./
       DATA SCHMSOL         /'FCREST'/
       DATA SCHMURB         /'NIL'/
@@ -1354,6 +1385,7 @@
       DATA TSCONFC         /.FALSE./
       DATA TYPSOL          /.FALSE./
       DATA Z0DIR           /.FALSE./
+      DATA Z0TRDPS300      /.FALSE./
       DATA Z0MIN2          /1.5E-5/
       DATA Z0TLAT          /2*0.0/
       DATA ZTA             /-1./

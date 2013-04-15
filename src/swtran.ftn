@@ -57,6 +57,7 @@
 *
 * 001    P.Vaillancourt, M.Lazarre (Oct 2006) : singularity problem
 *        (loop 200) in clear and all sky solved with real*8 promotion
+* 002    P.Vaillancourt (Feb 2012) : singularity problem again; increase min of yy to 1.e-10
 *
 *Object
 *
@@ -154,7 +155,7 @@ c
         tdf(i,1,k)                = (u2 + u2) * efun * rn
         x2                        =  alamd * rmu(i)
         yy                        =  1.0 - x2 * x2
-        yy                        = dsign (max (dabs(yy),1.d-15),yy)
+        yy                        = dsign (max (dabs(yy),1.d-10),yy)
         dm                        =  om1 / yy
         gscw                      =  ssgas1 * cow
         appgm                     = (c1(i) + 0.50 +
@@ -206,7 +207,7 @@ c
           rn                      =  1.0 / (uu + u2 + 1.0 - x3)
           x4                      =  alamd * rmu(i)
           yy                      =  1.0 - x4 * x4
-          yy                      = dsign (max (dabs(yy),1.d-15),yy)
+          yy                      = dsign (max (dabs(yy),1.d-10),yy)
           dm                      =  om2 / yy
           gscw                    =  ssgas2 * cow
           appgm                   = (c1(i) + 0.50 +

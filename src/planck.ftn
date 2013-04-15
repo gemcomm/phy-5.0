@@ -36,7 +36,7 @@
 *
 *Revisions
 *
-* 001
+* 001    P. Vaillancourt (Feb 12) - assume temperature is isothermal above model top
 *
 *Object
 *
@@ -92,7 +92,10 @@ c
      2                            dt * (xp(4,ib) + dt * (xp(5,ib) +
      3                            dt *  xp(6,ib) )))) 
 c
-        dt          = (2. * tfull(i,1) - tfull(i,2)) * rtstand - 1.0
+c The following line extrapolates the temperature above model top for moon layer temperature
+c        dt          = (2. * tfull(i,1) - tfull(i,2)) * rtstand - 1.0
+c The following line assumes isothermal temperature above model top
+        dt          =  tfull(i,1) * rtstand - 1.0
         xxt         =  xp(1,ib) + dt * (xp(2,ib) + dt * (xp(3,ib) +
      2                            dt * (xp(4,ib) + dt * (xp(5,ib) +
      3                            dt *  xp(6,ib) )))) 

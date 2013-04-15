@@ -60,6 +60,8 @@
 *Revisions
 *  001    P.Vaillancourt, M.Lazare (sep 2006) : displace a1(i,5)
 *  002    P.Vaillancourt           (Apr 08) : use integer variables(ilg1,ilg2) instead of actual integers
+*  003    P.Vaillancourt           (Feb 12) : assume temperature is isothermal above model top
+*  004    P.Vaillancourt           (Feb 12) : impose min on humidity mixing ratio of 1.5e-6 kg/kg for sw and lw 
 *
 *Object
 *        Main subroutine that executes ccc radiative transfer
@@ -218,12 +220,13 @@
 * 
       real aero, a11, a12, a13, a21, a22, a23, a31, a32, a33, c20, c30
       real solarc, fracs, x, ct, gw, rgw, dfnet, gwgh, rsolarc, pgw 
-      real ubeta0, epsd0, hrcoef, uu3, cut, seuil 
+      real ubeta0, epsd0, hrcoef, uu3, cut, seuil, qmr, qmin 
       integer i, k, ib, lev1, maxc, l, jyes, lengath, j, kp1, ig, mcont
       logical gh
       integer ilg1,ilg2
 *
       parameter (seuil=1.e-3)
+      parameter (qmin=1.5e-6)
 c
 c----------------------------------------------------------------------
 c     for hrcoef, 9.80665 / 1004.64 / 100 = 9.761357e-05, in (k / sec),
@@ -346,7 +349,9 @@ c----------------------------------------------------------------------
 c     specific humidity to mixing ratio.                                
 c---------------------------------------------------------------------- 
 c
-        qg(i,k)                 =  qq(i,k) / (1.0 - qq(i,k))
+c        qg(i,k)                 =  qq(i,k) / (1.0 - qq(i,k))
+        qmr                     =  qq(i,k) / (1.0 - qq(i,k))
+        qg(i,k)                 =  max(qmr,qmin)
         dp(i,k)                 =  0.0102 * ps(i) * 
      1                            (shtj(i,kp1) - shtj(i,k))
         dt(i,k)                 =  tt(i,k) - 250.0 
@@ -465,7 +470,10 @@ c
 c---------------------------------------------------------------------- 
 c     reusing a1(i,5) for dt0                    
 c---------------------------------------------------------------------- 
-        a1(i,5)                 =  2.0 * tt(j,1) - tt(j,2) - 250.0
+c The following line extrapolates the temperature above model top for moon layer temperature
+c        a1(i,5)                 =  2.0 * tt(j,1) - tt(j,2) - 250.0
+c The following line assumes an isothermal temperature above model top for moon layer temperature
+        a1(i,5)                 =  tt(j,1) - 250.0
 c
   230 continue
 c
@@ -858,7 +866,10 @@ c     bound temperature for planck calculation.
 c---------------------------------------------------------------------- 
 c
       do 510 i = il1, il2
-        a1(i,5)                 =  2.0 * tt(i,1) - tt(i,2) - 250.0
+c The following line extrapolates the temperature above model top for moon layer temperature
+c        a1(i,5)                 =  2.0 * tt(i,1) - tt(i,2) - 250.0
+c The following line assumes an isothermal temperature above model top for moon layer temperature
+        a1(i,5)                 =  tt(i,1) - 250.0
         clt(i)                  =  0.0
         clb(i)                  =  0.0
         mtop(i)                 =  0

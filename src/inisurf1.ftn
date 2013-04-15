@@ -67,6 +67,7 @@
 *            glaciers roughness length with total roughness (as in soil 
 *            component)
 * 018   J.P. Toviesi (June 2009) - Add radslope options
+* 019   B. Bilodeau, G. Mercier (April 2009) - Added f<-e transfer of topo field mfbr
 *
 *
 *Object
@@ -284,6 +285,11 @@
         f(dhdy   +i) = e(dhdyen   + i)
         f(dhdxdy +i) = e(dhdxdyen + i)
 *
+        if ( offline_adapt ) then
+          f(mfhr + i) = e(mf     + i)   
+          f(mfbr + i) = e(mfbren + i)   
+        endif
+
       END DO
 *
       DO K=1,NL

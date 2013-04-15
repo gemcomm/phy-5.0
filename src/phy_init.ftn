@@ -64,7 +64,7 @@
 !
 ! Identify the current physics package and its version.
 !
-      phy_release_pck_version = 'RPN-CMC_5.0.4.1'
+      phy_release_pck_version = 'RPN-CMC_5.0.4.2'
 !
 ! Initialize master init control phy_init_ctrl and return function code
 ! If phy_init works properly, 

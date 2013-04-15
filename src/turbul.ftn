@@ -61,6 +61,8 @@
 * 013      M. Roch and B. Bilodeau (Jan 2006) - Prevent division by zero
 *                                               with hst_local
 * 014      J. Mailhot (Apr 2009) - Add wind gust diagnostic
+* 015      P. Vaillancourt (feb 2012) - import bugfix from v440b13 (init of tke)
+*             and add turbulence regime to MoisTKE call for RDPS 10km
 *
 *
 *Object
@@ -189,9 +191,12 @@
          DO K=1,NK
 *VDIR NODEP
             DO I=1,N
-               TKE(I,K)= MAX (ETRMIN, F(Z0+(indx_agrege-1)*N+I-1)/
-     X              (V(ZA+I-1)+F(Z0+(indx_agrege-1)*N+I-1))*
-     X              EXP(-(V(ZE+ik(I,K))- V(ZE+ik(I,NK)))/F(H+I-1)) )
+c               TKE(I,K)= MAX (ETRMIN, F(Z0+(indx_agrege-1)*N+I-1)/
+c     X              (V(ZA+I-1)+F(Z0+(indx_agrege-1)*N+I-1))*
+c     X              EXP(-(V(ZE+ik(I,K))- V(ZE+ik(I,NK)))/F(H+I-1)) )
+c     Imported from v440b13
+               TKE(I,K)= MAX( ETRMIN, 3.75*F(FRV+(indx_agrege-1)*N+I-1)**2 * 
+     1              EXP(-(V(ZE+ik(I,K))- V(ZE+ik(I,NK)))/F(H+I-1)) )
             END DO
          END DO
          if (advectke) then
@@ -261,7 +266,7 @@
      $              V(AT2T),V(AT2M),V(AT2E),
      $              wk2d, C, B, X, 4*NK, ETURBTAU, KOUNT,
      $              V(ZE), F(Z0+(indx_agrege-1)*N), V(GZMOM),
-     $              V(KCL),F(frv+(indx_agrege-1)*n),
+     $              V(KCL),F(frv+(indx_agrege-1)*n),F(TURBREG),
      $              X1,XB,XH,TRNCH,N,M,NK,IT)
 *
       ELSE

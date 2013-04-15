@@ -39,7 +39,8 @@
 !       2001 - m. charron
 !
 !Revision
-! 001      L. Spacek (Sep 2008) - calculate drag using centered differences
+! 001   L. Spacek (Sep 2008) - calculate drag using centered differences
+! 002   M. Charron & A. Zadra (June 2011) - use closest levels for centered differences
 !
 !Modules
 !
@@ -84,8 +85,9 @@
     !
     !  internal variables.
     !
-    INTEGER  i, l, lev1p, lev2m, k
+    INTEGER  i, l, lev1p, lev2m, k, it
     REAL*8  cos45, dendz, dendz2
+    REAL*8 :: work_u(nlons,nlevs), work_v(nlons,nlevs)
     !-----------------------------------------------------------------------
     cos45 = 0.7071068   
     !
@@ -179,14 +181,47 @@
        END DO
     END DO
     !
+    !  filter fluxes (5 iterations)
+    !
+    work_u = 0.
+    work_v = 0.
+    DO it=1,5
+       DO i = il1,il2
+          work_u(i,lev1) = 0.25*(2.*flux_u(i,lev1  ) + &
+                                    flux_u(i,lev1+1) )
+          work_v(i,lev1) = 0.25*(2.*flux_v(i,lev1  ) + &
+                                    flux_v(i,lev1+1) )   
+          work_u(i,lev2) = 0.25*(   flux_u(i,lev2-1) + &
+                                 2.*flux_u(i,lev2  ) )
+          work_v(i,lev2) = 0.25*(   flux_v(i,lev2-1) + &
+                                 2.*flux_v(i,lev2  ) )                                     
+       END DO
+       DO l = lev1+1,lev2-1
+          DO i = il1,il2     
+             work_u(i,l) = 0.25*(   flux_u(i,l-1) + &
+                                 2.*flux_u(i,l  ) + &
+                                    flux_u(i,l+1) )
+             work_v(i,l) = 0.25*(   flux_v(i,l-1) + &
+                                 2.*flux_v(i,l  ) + &
+                                    flux_v(i,l+1) )
+          END DO
+       END DO
+       DO l = lev1,lev2
+          DO i = il1,il2     
+             flux_u(i,l) = work_u(i,l) 
+             flux_v(i,l) = work_v(i,l) 
+          END DO
+       END DO      
+    END DO
+    !
     !  calculate drag at full levels using centered differences
     !      
     DO l = lev1p,lev2m
        DO i = il1,il2
           IF (lorms(i)) THEN
-             dendz2 = density(i,l) * ( alt(i,l+1) - alt(i,l-1) )
-             drag_u(i,l) = - ( flux_u(i,l+1) - flux_u(i,l-1) ) / dendz2
-             drag_v(i,l) = - ( flux_v(i,l+1) - flux_v(i,l-1) ) / dendz2
+             dendz2 = density(i,l) * ( alt(i,l-1) - alt(i,l) ) 
+             drag_u(i,l) = - ( flux_u(i,l-1) - flux_u(i,l) ) / dendz2
+             drag_v(i,l) = - ( flux_v(i,l-1) - flux_v(i,l) ) / dendz2
          ENDIF
        END DO
     END DO
