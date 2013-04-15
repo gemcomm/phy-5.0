@@ -24,7 +24,7 @@
 *
       integer fsiz, kount, trnch, vsiz, n, m, nk, nkp
       integer it, icpu
-      real f(fsiz), v(vsiz), tt(m,nk), qq(m,nk), ps(n), sig(n,nk)
+      real f(fsiz), v(vsiz), tt(m,nkp), qq(m,nk), ps(n), sig(n,nk)
       real liqwcin(n,nk), icewcin(n,nk), cldfrac(n*nk)
       real liqwpin(m,nk), icewpin(m,nk)
       real tau

@@ -13,6 +13,7 @@
 !if not, you can write to: EC-RPN COMM Group, 2121 TransCanada, suite 500, Dorval (Quebec), 
 !CANADA, H9P 1J3; or send e-mail to service.rpn@ec.gc.ca
 !-------------------------------------- LICENCE END --------------------------------------
+!copyright (C) 2001  MSC-RPN COMM  %%%CCC%%%
 ***S/P RADDRIV - MAIN SUBROUTINE FOR RADIATIVE TRANSFER
 *
 #include "phy_macros_f.h"
@@ -820,11 +821,17 @@ c     make sure that sw heating rate is never negative
       do k = 1,lev
       do i = ilg1, ilg2
         j = isun(i)
-        flxds(j,k)=flxd(i,k) 
-        flxus(j,k)=flxu(i,k) 
-          hrs(j,k)=max(hrs(j,k),0.)
+        flxds(j,k)=flxd(i,k)
+        flxus(j,k)=flxu(i,k)
       enddo
       enddo
+      do k = 1,lay
+      do i = ilg1, ilg2
+        j = isun(i)
+        hrs(j,k)=max(hrs(j,k),0.)
+      enddo
+      enddo
+
 c
   499 continue    
 c

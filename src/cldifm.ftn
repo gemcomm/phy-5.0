@@ -13,6 +13,7 @@
 !if not, you can write to: EC-RPN COMM Group, 2121 TransCanada, suite 500, Dorval (Quebec), 
 !CANADA, H9P 1J3; or send e-mail to service.rpn@ec.gc.ca
 !-------------------------------------- LICENCE END --------------------------------------
+!copyright (C) 2001  MSC-RPN COMM  %%%CCC%%% 
 ***S/P CLDIFM - GASEOUS CALCULATION
 *
 #include "phy_macros_f.h"
@@ -168,6 +169,7 @@ c
         levc(i,1)               =  0
         levc(i,2)               =  0
    40 continue
+      maxc=max(maxc,lev1)
 c
       do 65 k = 2, lev
         km1 = k - 1
