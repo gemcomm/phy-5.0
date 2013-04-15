@@ -47,10 +47,7 @@
 *               and a constant value)
 * 008      M. Faucher (Summer 2006) - If OWFLUX. is .true. in coupling mode,
 *                fluxes over ocean are taken from ocean model.
-* 009      P. Vaillancourt (May 2010) - modify saturation vapor pressure over salty water (ocean) - Zeng et al. 1998, J.ofClim.
-* 010      D. Deacu (Spring 2010) - Expression for scalar roughness length 
-*                similar to that used in the ECMWF model (Deacu et al. 2011,
-*                submitted)    
+*
 *Object
 *          Calculate: - surface roughness length (Z0) over open water
 *                       (not covered by ice) using Charnock's relation with a 
@@ -87,7 +84,6 @@
 *
       integer ptr, x
       INTEGER I, J, K
-      real qsat_o_salty
 *
 *
 *
@@ -116,7 +112,7 @@
       REAL BETA, RHO
 *
       REAL ALVIS_WAT, CMU, CTU, FC_WAT
-      REAL FC_CPL, FV_CPL, MC_CPL, MLAC
+      REAL FC_CPL, FV_CPL, MC_CPL
       REAL FV_WAT
       REAL HST_WAT, HU, ILMO_WAT
       REAL PS, QS, TH, TS, TT, UU, VV
@@ -125,13 +121,10 @@
       REAL ZFTEMP, ZFVAP, ZQDIAG, ZTDIAG
       REAL ZTSURF, ZTSRAD, ZUDIAG, ZVDIAG 
       REAL ZFRV, ZZUSL, ZZTSL
-
-      REAL ZFRVMIN
 *
       POINTER (IALVIS_WAT , ALVIS_WAT  (1) )
       POINTER (ICMU       , CMU        (1) )
       POINTER (ICTU       , CTU        (1) )
-      POINTER (IML        , MLAC        (1) )
       POINTER (IFC_CPL    , FC_CPL  (1) )
       POINTER (IFV_CPL    , FV_CPL  (1) )
       POINTER (IMC_CPL    , MC_CPL  (1) )
@@ -217,7 +210,6 @@
       LOCBUS (IALVIS_WAT, ALVIS  ,  0 )
       LOCBUS (ICMU      , BM     ,  0 )
       LOCBUS (ICTU      , BT     ,  0 )
-      LOCBUS (IML       , ML     ,  0 )
       LOCBUS (IFC_CPL   , FCCPL  ,  0 )
       LOCBUS (IFV_CPL   , FVCPL  ,  0 )
       LOCBUS (IMC_CPL   , MCCPL  ,  0 )
@@ -264,11 +256,8 @@
 *
 *                           Uses FOQSA instead of FOQST to take into account saturation
 *                           with respect to sea water (liquid between 0 and -1.8 C)
-      qsat_o_salty = 1.0
-      if (salty_qsat) qsat_o_salty = 0.98
       DO I=1,N
         QS(I) = FOQSA(TS(I),PS(I))
-        IF(MLAC(I) .LE. 0.001) QS(I) = qsat_o_salty*QS(I)
       END DO
 *
 *
@@ -277,7 +266,6 @@
 *       ---------------------------------------------------------------------------
 *
       beta = 0.018
-      ZFRVMIN=0.01
 
 *
 
@@ -294,27 +282,15 @@
 *            For Z0TLAT(1) < |lat| < Z0TLAT(2)
 *            we do a linear interpolation between Charnock and Z0HCON.
 *
-* 
-      if (Z0TRDPS300) then
-      DO I=1,N
-         ZFRV(I)=MAX(ZFRVMIN,  ZFRV(I))
-         Z0H(I) = MIN(2.e-05/ZFRV(I), 1.e-04)
-      END DO
-      else
-      DO I=1,N
-         Z0H(I) = Z0M(I)
-      END DO
-      endif
-
       DO I=1,N
 
         IF (ABS(ZDLAT(I)) .GE. Z0TLAT(2)) THEN 
-          Z0H(I) = Z0H(I)
+          Z0H(I) = Z0M(I)
         ELSE IF (ABS(ZDLAT(I)) .LE. Z0TLAT(1)) THEN
           Z0H(I) = Z0HCON
         ELSE
           Z0H(I)=( ((ABS(ZDLAT(I))-Z0TLAT(1))/(Z0TLAT(2)-Z0TLAT(1)))
-     +                  *(Z0H(I)-Z0HCON) ) + Z0HCON
+     +                  *(Z0M(I)-Z0HCON) ) + Z0HCON
         ENDIF
    
         VMOD  (I) = SQRT(MAX(VAMIN,UU(I)**2+VV(I)**2))

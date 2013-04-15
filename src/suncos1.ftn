@@ -22,7 +22,6 @@
           REAL XLAT(LMX),XLON(LMX),SCOS(LMX),HZ,DATE
           REAL DH,SDEC,CDEC,RDEC,AJOUR,SSIN(LMX),STAN(LMX),BSIN(LMX),BCOS(LMX)
           REAL A,EOT
-          REAL DAYRAD
           LOGICAL slope_L
 *
 *Author
@@ -38,8 +37,6 @@
 *               - calls to vscos, vssin routine (from massvp4 library)
 *               - unnecessary calculations removed
 * 005      J. P. Toviessi (July 2009) added modifications for radslope
-*
-* 006      P. Vaillancourt, I. Paunova (Oct 2009) Correct calculation of solar declination
 *
 *Object
 *          to calculate the cosines of the solar angle for LMX
@@ -73,17 +70,7 @@ C
 *
        IF(DATE.NE.0.) AJOUR=DATE
        IF(DATE.EQ.0.) AJOUR=30.4*(IDATIM(2)-1)+IDATIM(3)
-
-* Declinaision solaire de Robertson et Russelo 1968 
-      dayrad=AJOUR*2.*PI/365
-      rdec=.3964 + 3.631*sin(dayrad) - 22.97*cos(dayrad) + .03838*sin(2.*dayrad) -0.3885*cos(2.*dayrad) +
-     x           .07659*sin(3.*dayrad) -0.1587*cos(3.*dayrad)-0.01021*cos(4.*dayrad)
-
-      rdec=rdec*PI/180.
-
-* Declinaison solaire: approximation qui suppose que l'orbite est circulaire
-c      RDEC=0.412*COS((AJOUR+10.)*2.*PI/365.25 -PI)
-
+      RDEC=0.412*COS((AJOUR+10.)*2.*PI/365.25 -PI)
       SDEC=SIN(RDEC)
       CDEC=COS(RDEC)
 c correction for "equation of time"

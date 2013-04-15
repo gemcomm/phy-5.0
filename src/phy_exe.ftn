@@ -127,9 +127,6 @@
 *                                  - Move calculation of total tendencies before call calcdiag. 
 
 *
-* 058      B. Bilodeau/           - added call to new S/R adapt_forcings for offline mode.
-*          G. Mercier
-*
 *Object
 *          This is the main interface subroutine for the
 *          CMC/RPN unified physics
@@ -336,8 +333,6 @@
 *
 ************************************************************************
 *     mise a zero des valeurs negatives d'humidite specifique          *
-*     et d'humidite relative si on est en mode offline pour            *
-*     adaptation.                                                      *
 *     -------------------------------------------------------          *
 ************************************************************************
 *
@@ -345,15 +340,8 @@
          do i = 1,ni
             d(huplus +ik(i,k)) = max(0.,d(huplus +ik(i,k)))
             d(humoins+ik(i,k)) = max(0.,d(humoins+ik(i,k)))
-
-             if (offline_adapt ) then 
-                d(hrmoins+ik(i,k)) = max(0.,d(hrmoins+ik(i,k)))
-             endif
-
          end do
       end do
-
-       
 *
 ************************************************************************
 *     appel a la physique simplifiee si desire                         *
@@ -447,14 +435,6 @@
      $                qcdifv,
      $                kount, trnch,
      $                cdt1, ni, nk)
-
-      if ( offline_adapt ) then
-         
-         call adapt_forcings ( f, fsiz, v, vsiz, 
-     $                         d, dsiz, ni, nk  ,trnch)
-    
-      endif 
-
 *
 *     z0 directionnel
       if (z0dir) then

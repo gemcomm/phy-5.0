@@ -15,8 +15,8 @@
 !CANADA, H9P 1J3; or send e-mail to service.rpn@ec.gc.ca
 !-------------------------------------- LICENCE END --------------------------------------
 #endif
-*     CLIMATOLOGICAL VALUE OF 2 % OF LEADS IN MARINE ICE
+*     CLIMATOLOGICAL VALUE OF 3 % OF LEADS IN MARINE ICE
       REAL LEADFRAC
       SAVE LEADFRAC
-      DATA LEADFRAC / 0.02 /
+      DATA LEADFRAC / 0.03 /
 *

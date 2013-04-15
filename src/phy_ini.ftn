@@ -85,7 +85,6 @@
 *
 * 031       A-M. Leduc/P.Vaillancourt (Jan 2010) - add tendencies  uadv, uadvm, vadv, vadvm,
 *                                     tphytdm, huphytdm, uphytdm, vphytdm
-* 032       R. McTaggart-Cowan (Jan 2012) - add turbreg for turbulent hysteresis
 
 
 *
@@ -206,11 +205,6 @@
 *
       call gesdict (n, nk, mf,
      +'VN=mf;     ON=MF; VD=filtered topography (E);      VS=row;VB=e1')
-*
-      if ( offline_adapt ) then
-        call gesdict (n, nk, mfbren,
-     +  'VN=mfbren; ON=MFRB; VD=offline low res. topography (E); VS=row;VB=e1')
-      endif
 *
       call gesdict (n, nk, mgen,
      +'VN=mgen;  ON=6A; VD=land-sea mask (E);             VS=row;VB=e1')
@@ -397,14 +391,6 @@
 *
       call gesdict (n, nk, gzmoins6,
      +'VN=gzmoins6; ON=GM; VD=geopotential at t-dt;       VS=slb;VB=d1')
-*
-      if ( offline_adapt ) then
-        call gesdict (n, nk, hrmoins,
-     +  'VN=hrmoins; ON=HRM; VD=relative humidity at t-dt;   VS=slb;VB=d1')
-*
-        call gesdict (n, nk, hrplus,
-     +  'VN=hrplus; ON=HRP; VD=relative humidity at t+dt;   VS=slb;VB=d1')
-      endif
 *
       call gesdict (n, nk, humoins,
      +'VN=humoins; ON=H8; VD=specific humidity at t-dt;   VS=slb;VB=d1')
@@ -1119,13 +1105,6 @@
       call gesdict (n, nk, lwc,
      +'VN=lwc; ON=QD;  VD=cloud/water content at time T;  VS=slb;VB=p0')
 *
-      if ( offline_adapt ) then 
-        call gesdict (n, nk, mfhr,
-     +  'VN=mfhr; ON=MFHR;  VD=offline high res. topography;  VS=row;VB=p0')
-        call gesdict (n, nk, mfbr,
-     +  'VN=mfbr; ON=MFBR;  VD=offline low res. topography;  VS=row;VB=p0')
-      endif
-*
       call gesdict (n, nk, mg,
      +'VN=mg;   ON=MG; VD=land-sea mask;                  VS=row;VB=p0')
 *
@@ -1345,9 +1324,6 @@
 *
       call gesdict (n, nk, tsurf,
      +'VN=tsurf;ON=J8;VD=area-averaged surf. temperature; VS=row;VB=p0')
-*
-      call gesdict (n, nk, turbreg,
-     +'VN=turbreg; ON=TURB; VD=turbulent regime for PBL; VS=sls;VB=p0')
 *
       call gesdict (n, nk, tveg,
      +'VN=tveg;   ON=TE; VD=canopy temperature;           VS=row;VB=p0')

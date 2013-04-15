@@ -63,8 +63,6 @@
 *                          (Jan 2010)  and change name to bourge2
 * 025      A-M Leduc, P. vaillancourt - add new tendencies: uadv,vadv,uadm,vadm,
 *                          (Jan 2010) - tphytdm,huphytdm,uphytdm,vphytdm
-* 026      B. Bilodeau     (Feb 2010) - Do not perform RHDIAG calculation in offline
-*                                       mode at kount=0
 *
 *
 *Object
@@ -111,27 +109,23 @@
 *****************************************************************
 *
 *        
-*     Do not perform this in offline mode at initial time
-      if (.not.(ifluvert.eq.-1.and.kount.eq.0)) then
-*        Screen level relative humidity
-         if (wet) then
-           if (satuco) then
-             call mfohr(  v(rhdiag), f(qdiag), f(tdiag),
-     $          -1., d(pplus), 3,ni,1,ni )
-           else
-             call mfohra( v(rhdiag), f(qdiag), f(tdiag),
-     $          -1., d(pplus), 3,ni,1,ni )
-           endif
-         
-*          Clip the screen level relative humidity to a range from 0-1
-           do i = 0, ni-1
-             v(rhdiag + i) = max( min( v(rhdiag + i), 1.0 ), 0. )
-           enddo
-         else
-           do i = 0, ni-1
-             v(rhdiag + i) = 0.0
-           enddo
-         endif
+*     Screen level relative humidity
+      if (wet) then
+        if (satuco) then
+          call mfohr(  v(rhdiag), f(qdiag), f(tdiag),
+     $       -1., d(pplus), 3,ni,1,ni )
+        else
+          call mfohra( v(rhdiag), f(qdiag), f(tdiag),
+     $       -1., d(pplus), 3,ni,1,ni )
+        endif
+*       Clip the screen level relative humidity to a range from 0-1
+        do i = 0, ni-1
+          v(rhdiag + i) = max( min( v(rhdiag + i), 1.0 ), 0. )
+        enddo
+      else
+        do i = 0, ni-1
+          v(rhdiag + i) = 0.0
+        enddo
       endif
 *
 *     Screen level dewpoint depression

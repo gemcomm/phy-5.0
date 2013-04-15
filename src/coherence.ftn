@@ -45,8 +45,6 @@
 *             Define second WSOIL level for Force-Restore
 * 007     Y. Delage (Dec 2002)
 *             Introduction of CLASS
-* 008     B. Bilodeau and M. Carrera (Nov 2011)
-*             Change minimum value of soil water
 *
 *
 *Object
@@ -139,21 +137,14 @@
           END IF
 *
 *
+*                       Make sure there is soil water where 
+*                       MG > critmask
 *
-          IF (offline) THEN
-*            In offline mode, make sure soil water is nonnegative
-             f(wsoil+i   ) = max(f(wsoil+i   ),0.0)
-             f(wsoil+i+ni) = max(f(wsoil+i+ni),0.0)
-             f(isoil+i   ) = max(f(isoil+i   ),0.0)
-          ELSE
-*            Make sure there is soil water where 
-*            MG > critmask
-             IF (f(wsoil+i).LT.critwater) THEN
-               f(wsoil+i)    = 0.30
-             END IF
-             IF ((f(wsoil+i+ni)+f(isoil+i)).LT.critwater) THEN
-               f(wsoil+i+ni) = 0.30
-             END IF
+          IF (f(wsoil+i).LT.critwater) THEN
+            f(wsoil+i)    = 0.30
+          END IF
+          IF ((f(wsoil+i+ni)+f(isoil+i)).LT.critwater) THEN
+            f(wsoil+i+ni) = 0.30
           END IF
 *
           f(sand+i) = MAX(1.,f(sand+i))
@@ -204,22 +195,16 @@
           END IF
 *
 *
-          IF (offline) THEN
-*            In offline mode, make sure soil water is nonnegative
-             f(wsoil+i     ) = max(f(wsoil+i     ),0.0)
-             f(wsoil+i+ni  ) = max(f(wsoil+i+ni  ),0.0)
-             f(wsoil+i+2*ni) = max(f(wsoil+i+2*ni),0.0)
-             f(isoil+i     ) = max(f(isoil+i     ),0.0)
-          ELSE
-*            Make sure there is soil water where
-*            MG > critmask
-             IF (f(wsoil+i).LT.critwater) THEN
-               f(wsoil+i)    = 0.30
-             END IF
-             IF ((f(wsoil+i+ni)+f(isoil+i)).LT.critwater) THEN
-               f(wsoil+i+ni)   = 0.30
-               f(wsoil+i+2*ni) = 0.30
-             END IF
+*                       Make sure there is soil water where
+*                       MG > critmask
+*
+          IF (f(wsoil+i).LT.critwater) THEN
+            f(wsoil+i)    = 0.30
+          END IF
+          IF ((f(wsoil+i+ni)+f(isoil+i)).LT.critwater) THEN
+            f(wsoil+i+ni)   = 0.30
+            f(wsoil+i+2*ni) = 0.30
+
           END IF
 *
           if (f(tsoil+i     ).lt.273.15) f(wsoil+i     )=0.04
