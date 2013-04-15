@@ -1,0 +1,10 @@
+!copyright (C) 2001  MSC-RPN COMM  %%%RPNPHY%%%
+      subroutine suncos
+*
+      write(6,'(A)') "SUBROUTINE SUNCOS1 IS A"
+      write(6,'(A)') "MORE RECENT VERSION OF SUNCOS" 
+      CALL QQEXIT(1)
+*
+      return
+      end
+

@@ -1,0 +1,582 @@
+!-------------------------------------- LICENCE BEGIN ------------------------------------
+!Environment Canada - Atmospheric Science and Technology License/Disclaimer, 
+!                     version 3; Last Modified: May 7, 2008.
+!This is free but copyrighted software; you can use/redistribute/modify it under the terms 
+!of the Environment Canada - Atmospheric Science and Technology License/Disclaimer 
+!version 3 or (at your option) any later version that should be found at: 
+!http://collaboration.cmc.ec.gc.ca/science/rpn.comm/license.html 
+!
+!This software is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+!without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+!See the above mentioned License/Disclaimer for more details.
+!You should have received a copy of the License/Disclaimer along with this software; 
+!if not, you can write to: EC-RPN COMM Group, 2121 TransCanada, suite 500, Dorval (Quebec), 
+!CANADA, H9P 1J3; or send e-mail to service.rpn@ec.gc.ca
+!-------------------------------------- LICENCE END --------------------------------------
+***S/P  ETURBL7
+*
+#include "phy_macros_f.h"
+      SUBROUTINE ETURBL7(EN,ENOLD,ZN,ZD,GAMA,HOL,FN,
+     W                   ZE,GAMAL,QL,C,B,X,U,V,TT,TVE,
+     X                   QQ,QC,QE,H,PS,TS,S,SE,AT2M,AT2E,NKB,
+     X                   DSGDZ, TAU, KOUNT,  GAMAQ, CCS,
+     Y                   KT,Z,GZMOM,KCL,X1,XB,XH,TRNCH,N,M,NK,Z0,WK,IT)
+#include "impnone.cdk"
+      INTEGER NKB,TRNCH,N,M,NK
+      REAL EN(N,NK),ENOLD(N,NK),ZN(N,NK),ZD(N,NK)
+      REAL GAMA(N,NK),FN(N,NK)
+      REAL HOL(N),ZE(N,NK),C(N,NK),B(N,NKB),X(N,NK),U(M,NK),V(M,NK)
+      REAL GAMAL(N,NK),QL(N,NK)
+      REAL TT(M,NK),TVE(N,NK),QQ(M,NK),QC(M,NK),QE(N,NK),H(N),PS(N)
+      real TS(N),S(n,NK)
+      REAL SE(n,NK),AT2M(n,NK),AT2E(n,NK)
+      REAL DSGDZ(n,NK),TAU
+      INTEGER KOUNT
+      REAL LMN,Z0(N),AA,FIMS
+      REAL KCL(N),WK(N,2)
+      REAL KT(N,NK),GAMAQ(N,NK),CCS(N,NK),FITS
+      REAL Z(N,NK),GZMOM(N,NK)
+      REAL X1(N,NK)
+      REAL XB(N),XH(N)
+      INTEGER IT
+      REAL HEURSER,EXP_TAU_O_7200
+      INTEGER IERGET
+      EXTERNAL MZONXST, SERGET
+*     
+*Author
+*          J. Cote (RPN 1983)
+*
+*Revision
+* 001      J. Cote RPN(Nov 1984)SEF version documentation
+* 002      M. Lepine  -  RFE model code revision project (Feb 87)
+*                      -  Remove COMMON WKL2D1 and pass the
+*                         work field in parameter
+* 003      J.Mailhot RPN(Sep 1985) Series (RIF,BILAN EN)
+* 004      J.Mailhot RPN(Oct 1985) Scaling (ZN,ZE,C)
+* 005      J.Mailhot RPN(Oct 1985) Add countergradient term
+*               Adaptation to revised code G.Pellerin (Oct87)
+* 006      J. Mailhot-G.Pellerin (Nov 87) - Correction to the
+*                vertical diffusion of the turbulent energy
+* 007      J.Mailhot-G.Pellerin (Apr88)
+*               Return to the old formula for stable LAMBDA
+*               (with relaxation term (noise))
+*               countergradient term to zero.
+* 008      MJ L'Heureux  (Mar89) Initializations of fields
+*                                at KOUNT=0
+* 009      R.Benoit (Mar89)   -Y. Delage (May89)
+*               Revision of vertical diffusion
+* 010      Y. Delage (Jan90)
+*                Return DIAGSF and ETURBL coherents with FLXSRF for
+*                the calculation of unstable diffusion coefficients
+* 011      N. Brunet  (May90)
+*                Standardization of thermodynamic functions
+* 012      J.Mailhot RPN(Feb 1990) Shallow convection (GELEYN)
+* 013      G.Pellerin(August90)Adaptation to thermo functions
+* 014      Y. Delage  (Nov 1990) Options of shallow convection
+* 015      Y. Delage  (Nov1990)
+*                  Removal OFA,EA,PRI and BETA
+*                  Replace WC and HOL by ILMO
+* 016      N. Brunet  (May91)
+*                New version of thermodynamic functions
+*                and file of constants
+* 017      B. Bilodeau  (July 1991)- Adaptation to UNIX
+*
+* 018      C. Girard (Nov 1992)
+*          Modification of the shallow convection:
+*          - end of GELHU option
+*          - new significance for GELEYN option
+*          Modification to definitions:
+*          - neutral mixing length
+*          - stability functions
+*          - parameters XX=0., X1=.14
+* 019      B. Bilodeau (May 1994) - New physics interface
+* 020      G. Pellerin (Nov 1994) - New surface layer formulation
+* 021      G. Pellerin (Jan 1995) - Modifier l'extraction de LE
+* 022      G. Pellerin (Jun 1995) - Revert to original rigrad for
+*                          computation of unstable boundary layer
+* 023      B. Bilodeau (Nov 1995) - Replace VK by KARMAN
+* 024      B. Bilodeau and J. Mailhot (Jan 1996) -
+*          Eliminate divisions by zero
+* 024      R. Sarrazin (Jan 1996) - Carry boundary layer pointer in KCL
+* 025      C. Girard (Fev 1996) - Introduce different options for
+*             shalow convection - GELEYN,CONRES,SHALOW
+* 026      A-M.Leduc (Sept 2002) - add QC in arguments and remove ISHLCVT  
+*                                  eturbl4--->eturbl5.
+*                                  Add X1 calculation for call to mixlen1.
+* 027      J. Mailhot (Mar 2003) - TKE advection.
+* 028      A. Plante (June 2003) - IBM conversion
+*             - Replace call to CVMG* by if-else statements
+*             - call to exponen4 (to calculate power function '**')
+*             - call to vslog routine (from massvp4 library)
+*             - constants precomputations
+*             - @PROCESS STRICT compilation option added
+* 029      S. Belair  (Mar 2003) - Add F(ZD) in arguments ...> eturbl6
+*             - Use time filter for the Bougeault-Lacarrere mixing length.
+*
+* 030      A. Plante (July 2003) - Correct bug in IBM conversion :
+*             - Virtual temperature was incorrect for MIXLEN1. This was
+*               a problem only if ilongmel = 1
+* 031      B. Bilodeau (Aug 2003) - exponen4 replaced by vspow
+*                                   call to mixlen2
+* 032      A-M. Leduc (March 2004) - add arguments S ans PS to MIXLEN2--->
+*                                    MIXLEN3
+* 033      Y. Delage (Sept 2004) - Introduce log-linear profile mixing length for
+*                                    near-neutral cases.  Optimisation of KT.
+* 034      L. Spacek (Dec 2007) - add "vertical staggering" option
+*                                 change the name to eturbl7
+*Object
+*          to predict EN(turbulent energy) and ZN(mixing length)
+*
+*Arguments
+*
+*          - Input/Output -
+* EN       turbulent energy
+* ZN       mixing length of the turbulence
+*
+*          - Input -
+* ENOLD    turbulent energy (at time -)
+* ZNOLD    mixing length of the turbulence (at time -)
+* GAMA     countergradient term in the transport coefficient of
+*          Theta and Q
+* HOL      inverse of length of Monin-Obokhov
+* FN       cloud fraction
+* ZE       work space (N,NK)
+* C        work space (N,NK)
+* B        work space (N,NKB)
+* X        work space (N,NK)
+* U        east-west component of wind
+* V        north-south component of wind
+* T        temperature
+* TVE      virtual temperature on 'E' levels
+* Q        specific humidity
+* QC       cloud water
+* QE       specific humidity on 'E' levels
+*
+*          - Input/Output -
+* H        boundary layer height
+*
+*          - Input -
+* PS
+* S        sigma level
+* SE       sigma level for turbulent energy
+* AT2M     coefficients for interpolation of T,Q to momentum levels
+* AT2E     coefficients for interpolation of T,Q to energy levels
+* NKB      second dimension of work field B
+* DSGDZ    sigma intervals
+* TAU      timestep
+* KOUNT    index of timestep
+* KT       ratio of KT on KM (real KT calculated in DIFVRAD)
+* Z        height of sigma level
+* GZMOM    height of sigma momentum levels
+*
+*          - Input/Output -
+* KCL      index of 1st level in boundary level - 3
+*
+*          - Input -
+* X1       work space (N,NK)
+* XB       work space (N)
+* XH       work space (N)
+* TRNCH    number of the slice
+* N        horizontal dimension
+* M        1st dimension of T, Q, U, V
+* NK       vertical dimension
+* Z0       roughness length
+* WK       work space (N,2)
+* IT       number of the task in muli-tasking (1,2,...) =>ZONXST
+*
+*Notes
+*          EN and ZN contain the values at time T and input U
+*          and V are wind images. C and ZE are over-written.
+*          Refer to J.Mailhot and R.Benoit JAS 39 (1982)Pg2249-2266
+*          and Master thesis of J.Mailhot.
+*
+*
+*IMPLICITES
+*
+#include "clefcon.cdk"
+*
+#include "surfcon.cdk"
+*
+#include "machcon.cdk"
+*
+#include "consphy.cdk"
+*
+#include "options.cdk"
+*
+*MODULES
+*
+      EXTERNAL ABSDVDZ3,RIFLUX
+      EXTERNAL RIGRAD1,GELEYN,CONRES1,SHALOW
+      EXTERNAL SERXST
+      EXTERNAL DIFUVDF, MIXLEN3
+*
+*
+**
+*
+************************************************************************
+*     AUTOMATIC ARRAYS
+************************************************************************
+*
+      AUTOMATIC (TEMPO ,REAL   , (N)     )
+      AUTOMATIC (WORK  ,REAL   , (N,NK) )
+      AUTOMATIC (FIMI  ,REAL   , (N,NK) )
+      AUTOMATIC (FIMIR ,REAL   , (N,NK) )
+      AUTOMATIC (FITI  ,REAL   , (N,NK) )
+      AUTOMATIC (T     ,REAL   , (N,NK) )
+      AUTOMATIC (Q     ,REAL   , (N,NK) )
+      AUTOMATIC (TE    ,REAL   , (N,NK) )
+      AUTOMATIC (QCE   ,REAL   , (N,NK) )
+*
+************************************************************************
+*
+*     temporary variables used to convert a #@$%!& CVMG.. expression
+*
+      real yuk1,yuk2
+*
+      REAL ZNOLD(N,NK)
+      REAL PETIT,SC,EXP_EXPLIM,TAUINV,BETAI
+      SAVE PETIT
+      SAVE LMDA,AA
+      INTEGER J,K
+      INTEGER NKE
+*
+      DATA PETIT / 1.E-6 /
+      REAL LMDA
+      DATA LMDA, AA  / 200., 0.516/
+*
+      EXP_TAU_O_7200=EXP(-TAU/7200.)
+      EXP_EXPLIM=EXP(-EXPLIM)
+      TAUINV=1.0/TAU
+*
+      NKE=NK-1
+*
+*     Interpolate on momentum levels if necessary
+*
+
+      CALL TOTHERMO(Q,  QQ, AT2M,AT2M,N,NK+1,NK,.false.)
+      CALL TOTHERMO(T,  TT, AT2M,AT2M,N,NK+1,NK,.false.)
+
+      CALL TOTHERMO(TT, TE, AT2E,AT2E,N,NK+1,NK,.true.)
+      CALL TOTHERMO(QC,QCE, AT2E,AT2E,N,NK+1,NK,.true.)
+*
+*     B  =  ( D VENT / D Z ) ** 2
+*
+      CALL ABSDVDZ3(B,U,V,TVE,SE,DSGDZ,S,N,M,NK)
+*
+      DO k=1,NKE
+         DO j=1,N
+            B(j,k) = B(j,k) + PETIT
+         END DO
+      END DO
+*
+*     X  = RI  ( NOMBRE DE RICHARDSON GRADIENT)
+*
+      CALL RIGRAD1(X,GAMA,GAMAQ,XB,B,T,TVE,Q,QE,
+     +             S, SE, WK, N, M, NK )
+*
+      CALL SERGET ('HEURE', HEURSER, 1, IERGET)
+      CALL SERXST(X,'RI',TRNCH,N,0.,1.,-1)
+      CALL MZONXST( X, 'RI', TRNCH, N, HEURSER, 1.0, -1, IT)
+*
+      DO J=1,N
+         KCL(J)=XB(J)
+      END DO
+*
+*           AJOUT DE L'EFFET DE LA CONVECTION RESTREINTE
+*
+      DO k=1,NKE
+         DO j=1,N
+            FN(j,k) = 0.
+            GAMAL(j,k) = 0.
+            WORK(j,k) = 0.
+         END DO
+      END DO
+*
+      if( ISHLCVT(1).eq.1 ) then
+         CALL GELEYN(X,T,TVE,Q,QE,PS,S,SE,B,N,M,NK)
+*
+      else if( ISHLCVT(1).eq.2 ) then
+         CALL CONRES1(X,GAMA,GAMAQ,WORK,T,TVE,Q,QE,PS,
+     +               HOL,S,SE,B,WK,N,M,NK)
+*
+      else if( ISHLCVT(1).eq.3 .or. ISHLCVT(1).eq.4 ) then
+         CALL TOTHERMO(WORK, CCS, AT2M,AT2M,N,NK+1,NK,.false.)
+         CALL TOTHERMO(FITI,  QL, AT2M,AT2M,N,NK+1,NK,.false.)
+         CALL SHALOW(X,GAMA,GAMAQ,GAMAL,WORK,T,TVE,Q,QE,
+     +               FITI,PS,S,SE,B,WK,ISHLCVT,N,M,NK)
+      endif
+*
+      CALL SERXST(X,'RM',TRNCH,N,0.,1.,-1)
+      CALL MZONXST( X, 'RM', TRNCH, N, HEURSER, 1.0, -1, IT)
+*
+
+*                               CALCUL DE LA LONGUEUR DE MELANGE
+*
+*
+       ZNOLD(:,:) = ZN(:,:)
+*
+*
+*                               A) BLACKADAR (1962)
+*
+
+
+      DO K=1,NKE
+      DO J=1,N
+         WORK(J,K)=1-CI*MIN(X(J,K),0.)
+      ENDDO
+      ENDDO
+      CALL VSPOWN1 (FIMI,WORK,-1./6.,N*NKE)
+      CALL VSPOWN1 (FITI,WORK,-1./3.,N*NKE)
+*
+      BETAI=1/BETA
+      DO 20 K=1,NKE
+      DO 20 J=1,N
+           LMN=MIN(KARMAN*(Z(J,K)+Z0(J)),LMDA)
+           FIMS=MIN(1+AS*X(J,K),1/MAX(PETIT,1-ASX*X(J,K)))
+           FITS=BETA*FIMS 
+           if (X(J,K) .ge. 0.) then
+              ZN(J,K) = LMN*(1/FIMS)
+           else
+              ZN(J,K) = LMN*(1/FIMI(J,K))
+           endif
+*  METTRE DANS KT LE RAPPORT KT/KM (=FIM/FIT)
+           if (X(J,K) .ge. 0.) then
+              KT(J,K)=BETAI
+           else
+              KT(J,K)=FIMI(J,K)/FITI(J,K)
+           endif
+   20 CONTINUE
+*
+*     X  = RIF ( NOMBRE DE RICHARDSON DE FLUX)
+*
+      CALL RIFLUX(X,KT,N,M,NK)
+      CALL SERXST ( X , 'RF' , TRNCH , N , 0.0 , 1.0 , -1 )
+      CALL MZONXST ( X , 'RF' , TRNCH , N , HEURSER, 1.0, -1, IT)
+*
+*                                Calculate the mixing length
+*                                according to Bougeault and
+*                                Lacarrere (1989)
+*
+      if ( ilongmel.eq.1) then
+*
+         CALL VSPOWN1 (X1,SE,-CAPPA,N*NK)
+         DO K=1,NK
+         DO J=1,N
+*                                Virtual potential temperature (THV)
+            X1(J,K)=TE(J,K)*(1.0+DELTA*QE(J,K)-QCE(J,K))*X1(J,K)
+         END DO
+         END DO
+*
+         CALL MIXLEN3( ZN, X1, ENOLD, GZMOM(1,2), H, S, PS, N, NK)
+*
+      endif
+*
+*
+*
+      IF(KOUNT.NE.0 )THEN
+        DO K=1,NKE
+        DO J=1,N
+          ZN(J,K)=ZN(J,K)+(ZNOLD(J,K)-ZN(J,K))*EXP_TAU_O_7200
+        END DO
+        END DO
+      ENDIF
+*
+*
+*
+      IF ( ilongmel.EQ.0) THEN
+*
+        DO K=1,NKE
+        DO J=1,N
+          ZE(J,K)=MAX(ZN(J,K),1.E-6)
+        END DO
+        END DO
+*
+      ELSE IF (ilongmel.EQ.1) THEN
+*
+        DO K=1,NKE
+        DO J=1,N
+          ZE(J,K) = ZN(J,K) * ( 1. - MIN( X(J,K) , 0.4) )
+     1              / ( 1. - 2.*MIN( X(J,K) , 0.4) )
+          ZE(J,K) = MAX ( ZE(J,K) , 1.E-6 )
+        END DO
+        END DO
+*
+      END IF
+*
+*
+*
+      ZD(:,: ) = ZE(:,:)
+*     FOR OUTPUT
+      ZD(:,NK) = 0.0
+
+
+*
+      CALL SERXST (ZN, 'L1', TRNCH, N, 0.0, 1.0, -1)
+      CALL SERXST (ZE, 'L2', TRNCH, N, 0.0, 1.0, -1)
+*
+*
+      CALL SERXST  ( ZE , 'LE' , TRNCH , N , 0.0    , 1.0, -1    )
+      CALL MZONXST ( ZE , 'LE' , TRNCH , N , HEURSER, 1.0, -1, IT)
+*
+         DO 14 K=1,NKE
+        DO 14 J=1,N
+          ZE(J,K)=1./ZE(J,K)
+   14 CONTINUE
+*
+*
+*     CALCUL DES TERMES ALGEBRIQUES DE L'EQUATION
+*             DE L'ENERGIE TURBULENTE
+*
+* B       - PRODUCTION MECANIQUE ET THERMIQUE DE L'ENERGIE TURBULENTE
+*           PEUT ETRE NEGATIVE OU POSITIVE
+* C       - DISSIPATION VISQUEUSE DE L'ENERGIE TURBULENTE > 0.0
+*
+      DO 2 K=1,NKE
+         DO 2 J=1,N
+            C(J,K)=0.14*ZE(J,K)
+*
+      ZE(J,K)=(B(J,K)-PETIT)*ZN(J,K)*AA/(C(J,K)+PETIT)
+      X(J,K)=-B(J,K)*X(J,K)*ZN(J,K)*AA/(C(J,K)+PETIT)
+    2       B(J,K)=(C(J,K)+PETIT)*(ZE(J,K)+X(J,K))
+*
+      IF(KOUNT.EQ.0)THEN
+*
+*     SOLUTION STATIONNAIRE
+*
+*     ON INITIALISE EN
+*     STATION EST ENLEVE  (+PRECALCUL DE EN)
+*
+         DO 33 K=1,NK
+            DO 33 J=1,N
+   33          X(J,K)=0.0
+*
+         CALL SERXST ( X , 'EM' , TRNCH , N , 0.0 , 1.0 , -1 )
+         CALL MZONXST ( X , 'EM' , TRNCH , N , HEURSER, 1.0, -1, IT)
+         CALL SERXST ( X , 'EB' , TRNCH , N , 0.0 , 1.0 , -1 )
+         CALL MZONXST ( X , 'EB' , TRNCH , N , HEURSER, 1.0, -1, IT)
+         CALL SERXST ( X , 'ED' , TRNCH , N , 0.0 , 1.0 , -1 )
+         CALL MZONXST ( X , 'ED' , TRNCH , N , HEURSER, 1.0, -1, IT)
+         CALL SERXST ( X , 'ET' , TRNCH , N , 0.0 , 1.0 , -1 )
+         CALL MZONXST ( X , 'ET' , TRNCH , N , HEURSER, 1.0, -1, IT)
+         CALL SERXST ( X , 'ER' , TRNCH , N , 0.0 , 1.0 , -1 )
+         CALL MZONXST ( X , 'ER' , TRNCH , N , HEURSER, 1.0, -1, IT)
+*
+*
+      ELSE
+*
+*     SOLUTION DE LA PARTIE ALGEBRIQUE DE L'EQUATION
+*               DE L'ENERGIE TURBULENTE
+*
+         DO 4 K=1,NKE
+            DO J=1,N
+*
+               if(B(J,K).eq.0.) then
+                 C(J,K)= C(J,K)*TAU
+               else
+                 C(J,K)= SQRT(ABS(C(J,K)/B(J,K)))
+                 B(J,K)=MIN(B(J,K)*C(J,K)*TAU,EXPLIM)
+               endif
+*
+             if(B(J,K).gt.0.0) then
+               yuk1 = -1.0+2.0/(1.0+EXP(-AMIN1(ABS(B(J,K)),174.))*(-1.0+2.0/
+     *                 (1.0+SQRT(EN(J,K))*C(J,K))))
+               B(J,K) = yuk1
+             else if(B(J,K).lt. 0.0) then
+               yuk1 = TAN(MIN(TANLIM,MAX( ATAN( SQRT(EN(J,K))*C(J,K) )
+     *                       +0.5*B(J,K) , 0.0 ) ) )
+               B(J,K) = yuk1
+             else
+               yuk1 = SQRT(EN(J,K))*C(J,K)/(1.+0.5*SQRT(EN(J,K))*C(J,K))
+               B(J,K) = yuk1
+             endif
+*
+               if(C(J,K).eq.0) then
+                B(J,K)=EN(J,K)
+               else
+                B(J,K)=(B(J,K)/C(J,K))**2
+               endif
+               if(B(J,K)-PETIT .lt. 0.) B(J,K)=ETRMIN
+               C(J,K)=ZE(J,K)+X(J,K)
+*
+*              TERMES DE PRODUCTION MECANIQUE ET THERMIQUE NULS SI EN=C
+               IF ((EN(J,K)-C(J,K)).NE.0.0) THEN
+                  yuk2=ABS((B(J,K)-C(J,K)) / (EN(J,K)-C(J,K)))
+                  tempo(j)=max(yuk2,exp_explim)
+               ELSE
+                  TEMPO(j) = 1.0
+               ENDIF
+            enddo
+            call vslog(tempo,tempo,n)
+            do j=1,n
+*
+*     TERME DE PRODUCTION MECANIQUE
+*
+               ZE(J,K)=-ZE(J,K)*tempo(j) *tauinv
+*
+*     TERME DE PRODUCTION THERMIQUE
+*
+               X(J,K)=-X(J,K)  *tempo(j) *tauinv
+*
+*     TERME DE DISSIPATION VISQUEUSE
+               C(J,K)=-X(J,K)-ZE(J,K)+(B(J,K)-EN(J,K))*TAUINV
+            enddo
+ 4       continue
+            DO 41 J=1,N
+               ZE(J,NK)=0.0
+               X (J,NK)=0.0
+               C (J,NK)=0.0
+               EN(J,NK)=0.0
+   41        CONTINUE
+*
+         CALL SERXST ( ZE , 'EM' , TRNCH , N , 0.0 , 1.0 , -1 )
+         CALL MZONXST ( ZE , 'EM' , TRNCH , N , HEURSER, 1.0, -1, IT)
+         CALL SERXST ( X , 'EB' , TRNCH , N , 0.0 , 1.0 , -1 )
+         CALL MZONXST ( X , 'EB' , TRNCH , N , HEURSER, 1.0, -1, IT)
+         CALL SERXST ( C , 'ED' , TRNCH , N , 0.0 , 1.0 , -1 )
+         CALL MZONXST ( C , 'ED' , TRNCH , N , HEURSER, 1.0, -1, IT)
+*
+*     SOLUTION DE LA PARTIE DIFFUSIVE (E-F) DE L'EQUATION
+*                   DE L'ENERGIE TURBULENTE
+*
+         DO 5 K=1,NK
+            DO 5 J=1,N
+               SC=CLEFAE*AA
+*     (E*-EN)/TAU
+               X(J,K)=X(J,K)+C(J,K)+ZE(J,K)
+               ZE(J,K)=B(J,K)
+    5          C(J,K)=SC*ZN(J,K)*SQRT(ENOLD(J,K))*DSGDZ(j,k)**2
+*
+*
+*     METTRE X1 A ZERO
+      DO 67 K=1,NK
+         DO 67 J=1,N
+67          X1(J,K)=0
+*     C CONTIENT K(E) ET X1 CONTIENT ZERO
+      CALL DIFUVDFj (EN,ZE,C,X1,X1,XB,XH,S,SE,2*TAU,3,1.,
+     %               B(1,1),B(1,NK+1),B(1,2*NK+1),B(1,3*NK+1),
+     %          N,N,N,NKE)
+*     NOUVEAU EN
+      DO 68 K=1,NK
+         DO 68 J=1,N
+68          EN(J,K)=ZE(J,K)+2*TAU*EN(J,K)
+         DO 6 K=1,NK-1
+            DO 6 J=1,N
+               EN(J,K)=MAX(ETRMIN,0.5*(EN(J,K)+ZE(J,K)))
+*     TERME DE TRANSPORT
+               C(J,K)=(EN(J,K)-ZE(J,K))/TAU
+*     TAUX DE VARIATION DE EN (RESIDU)
+    6          X(J,K)=C(J,K)+X(J,K)
+*
+      DO 61 J=1,N
+         C(J,NK)=0.0
+   61    X(J,NK)=0.0
+*
+         CALL SERXST ( C , 'ET' , TRNCH , N , 0.0 , 1.0 , -1 )
+         CALL MZONXST ( C , 'ET' , TRNCH , N , HEURSER, 1.0, -1, IT)
+         CALL SERXST ( X , 'ER' , TRNCH , N , 0.0 , 1.0 , -1 )
+         CALL MZONXST ( X , 'ER' , TRNCH , N , HEURSER, 1.0, -1, IT)
+*
+      ENDIF
+*
+      RETURN
+      END

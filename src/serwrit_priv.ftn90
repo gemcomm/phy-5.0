@@ -1,0 +1,114 @@
+!-------------------------------------- LICENCE BEGIN ------------------------------------
+!Environment Canada - Atmospheric Science and Technology License/Disclaimer, 
+!                     version 3; Last Modified: May 7, 2008.
+!This is free but copyrighted software; you can use/redistribute/modify it under the terms 
+!of the Environment Canada - Atmospheric Science and Technology License/Disclaimer 
+!version 3 or (at your option) any later version that should be found at: 
+!http://collaboration.cmc.ec.gc.ca/science/rpn.comm/license.html 
+!
+!This software is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+!without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+!See the above mentioned License/Disclaimer for more details.
+!You should have received a copy of the License/Disclaimer along with this software; 
+!if not, you can write to: EC-RPN COMM Group, 2121 TransCanada, suite 500, Dorval (Quebec), 
+!CANADA, H9P 1J3; or send e-mail to service.rpn@ec.gc.ca
+!-------------------------------------- LICENCE END --------------------------------------
+!/**
+subroutine serwrit4_priv (F_date,F_etiket,F_nk,F_ig,F_dgrw,F_hybm,F_hybt, &
+     F_am_8,F_bm_8,F_at_8,F_bt_8,F_rcoef,F_ptop_8,F_pref_8,F_vcode,      &
+     F_rgas_8,F_grav_8,F_satues_L,F_satuco_L,F_init_L,F_wr_L,            &
+     F_step1out_L)
+
+  implicit none
+
+  !@objective Generate a time series binary dump file.
+
+  !@arguments
+  integer, dimension(:), intent(in) :: F_date           !date array
+  character(len=*), intent(in) :: F_etiket              !forecast label
+  integer, intent(in) :: F_nk                           !number of momentum levels
+  integer, dimension(:), intent(in) :: F_ig             !ig1-4 of grid descriptors (^^ and >>)
+  real, intent(in) :: F_dgrw                            !east-west grid orientation
+  real, dimension(:), intent(in) :: F_hybm              !momentum levels
+  real, dimension(:), intent(in) :: F_hybt              !thermodynamic levels
+  real(kind=8), dimension(:), intent(in) :: F_am_8      !a-coefficients (momentum)
+  real(kind=8), dimension(:), intent(in) :: F_bm_8      !b-coefficients (momentum)
+  real(kind=8), dimension(:), intent(in) :: F_at_8      !a-coefficients (thermodynamic)
+  real(kind=8), dimension(:), intent(in) :: F_bt_8      !a,b-coefficients (thermodynamic)
+  real, dimension(:), intent(in) :: F_rcoef             !rectification coefficients
+  real(kind=8), intent(in) :: F_ptop_8                  !top level pressure
+  real(kind=8), intent(in) :: F_pref_8                  !reference pressure
+  integer, intent(in) :: F_vcode                        !vertical coordinate code
+  real(kind=8), intent(in) :: F_rgas_8                  !dry gas constant
+  real(kind=8), intent(in) :: F_grav_8                  !gravity
+  logical, intent(in) :: F_satues_L                     !include saturation wrt ice for post-processing
+  logical, intent(in) :: F_satuco_L                     !include saturation wrt ice
+  logical, intent(in) :: F_init_L                       !write heading
+  logical, intent(in) :: F_wr_L                         !write time series values
+  logical, intent(in) :: F_step1out_L                   !write time series values at step 1
+
+  !@author Ron McTaggart-Cowan, 2009-04
+
+  !@revisions
+  !  2009-04,  Ron McTaggart-Cowan: update from serwrit3.ftn
+
+  !@description
+  !  See SERDBU for more information about the functionality
+  !  of this subprogram.  This subprogram is a member of the RPN
+  !  Physics package interface, and has an explicit interface
+  !  specified in itf_physics_f.h for inclusion by external 
+  !  packages that call the Physics.
+  !**/
+
+  ! Implicits
+#include "sercmdk.cdk"
+
+  ! Internal variables
+  integer :: k,l,m,err
+  real :: converti
+
+  ! External functions
+  integer, external :: write_encode_bang
+
+  ! Return if not initialized or writing
+  if ( nstat <= 0 .and. .not.F_wr_L) return
+  if (.not. initok) return
+
+  ! Write header on request
+  if (F_init_L .and. F_wr_L) then
+     converti = 100.
+     write(noutser) converti,nstat_g,                  &
+          (name(l),istat_g(l),jstat_g(l),l=1,nstat_g), &
+          nsurf,(surface(m,2),m=1,nsurf),              &
+          nprof,(profils(m,2),m=1,nprof),              &
+          (F_date(k),k=1,size(F_date)),F_etiket,F_nk,  &
+          size(F_ig),(F_ig(k),k=1,size(F_ig)),F_dgrw,  &
+          real(F_rgas_8),real(F_grav_8),F_satues_L,    &
+          F_satuco_L,tsmoyhr,srwri,size(F_hybm)+1,     &
+          real(F_ptop_8/F_pref_8),1d0,0d0,             &
+          (F_hybm(m),F_am_8(m),F_bm_8(m),m=1,size(F_hybm)),&
+          size(F_hybt),                                &
+          (F_hybt(m),F_at_8(m),F_bt_8(m),m=1,size(F_hybt)),&
+          size(F_rcoef),(F_rcoef(m),m=1,size(F_rcoef)),&
+          F_ptop_8,F_pref_8,F_vcode
+     write(6,*) ' ---ENTETE DE SERIES ECRITE SUR ',noutser
+  endif
+
+  ! Write time series entry
+  if ((kount == 1 .and. F_step1out_L) .or. mod(kount,serint) == 0) then
+     if (F_wr_L) write(noutser) heure,((sers(l,m),l=1,nstat_g),m=1,nsurf), &
+          (((serp(k,l,m),k=1,F_nk),l=1,nstat_g),m=1,nprof)
+     surface(1:nsurf,2) = ''
+     do l=1,nstat
+        sers(station(l),1:nsurf) = 0.
+     enddo
+     profils(1:nprof,2) = ''
+     do l=1,nstat
+        serp(1:F_nk,station(l),1:nprof) = 0.
+     enddo
+  endif
+
+  ! End of subprogram
+  return
+end subroutine serwrit4_priv
+

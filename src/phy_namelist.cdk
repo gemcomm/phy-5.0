@@ -1,0 +1,79 @@
+#if defined(DOC)
+!-------------------------------------- LICENCE BEGIN ------------------------------------
+!Environment Canada - Atmospheric Science and Technology License/Disclaimer, 
+!                     version 3; Last Modified: May 7, 2008.
+!This is free but copyrighted software; you can use/redistribute/modify it under the terms 
+!of the Environment Canada - Atmospheric Science and Technology License/Disclaimer 
+!version 3 or (at your option) any later version that should be found at: 
+!http://collaboration.cmc.ec.gc.ca/science/rpn.comm/license.html 
+!
+!This software is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+!without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+!See the above mentioned License/Disclaimer for more details.
+!You should have received a copy of the License/Disclaimer along with this software; 
+!if not, you can write to: EC-RPN COMM Group, 2121 TransCanada, suite 500, Dorval (Quebec), 
+!CANADA, H9P 1J3; or send e-mail to service.rpn@ec.gc.ca
+!-------------------------------------- LICENCE END --------------------------------------
+#endif
+!
+!     ***********************************************************
+!     DO NOT ADD TO THE NAMELIST VARIABLES THAT ARE SET BY THE  *
+!     DYNAMICS VIA A CALL TO PHY_OPT, SUCH AS: CLIMAT, COUPLING *
+!     DATE, DELT, LIN_V4D, PTOP_NML AND WET.                    *
+!                                                               *
+!     PLEASE KEEP THE LIST IN STRICT ALPHABETICAL ORDER.        *
+!                                                               *
+!     ***********************************************************
+!
+      NAMELIST /PHYSICS_CFGS/                                      \
+          ADVECTKE,AGREGAT,AS2,BETA2,BKGALB,CHAUF,CONVEC,          \
+          CORTM,DBGMEM,DIFFUW,DRAG,DRYLAPS,DZSEDI,EPONGE,ETRMIN2,  \
+          EVAP,FACDIFV,FACTDT,FLUVERT,FOMIC,GWDRAG,HC2,HF2,HM2,    \
+          ICELAC,ICEMELT,IHEATCAL,IMPFLX,INILWC,KFCDEPTH,KFCDET,   \
+          KFCDLEV,KFCMOM,KFCPCP,KFCRAD,KFCTIMEA,KFCTIMEC,          \
+          KFCTRIG4,KFCTRIGA,KFCTRIGL,KFCTRIGLAT,KKL2,KNTRAD,       \
+          KTICEFRAC,LIMSNODP,                                      \
+          LMETOX,LONGMEL,MOYHR,MY_CCNTYPE,MY_DBLMOM_C,             \
+          MY_DBLMOM_G,MY_DBLMOM_H,MY_DBLMOM_I,MY_DBLMOM_R,         \
+          MY_DBLMOM_S,MY_DIAGON,MY_DZSEDI,MY_FULL_VERSION,MY_ICEON,\
+          MY_INITN,MY_RAINON,MY_SEDION,MY_SNOWON,MY_WARMON,MOYHR,  \
+          NON_ORO,NSLOFLUX,OWFLUX,                                 \
+          PARSOL,PCPTYPE,PHY_PCK_VERSION,                          \
+          QCFC11,QCFC12,QCH4,QCO2,QN2O,RADFILES,RADFIX,RADFLTR,    \
+          RADIA,RADNIVL,RADSLOPE,                                  \
+          RMSCON,SATUCO,SCHMSOL,SCHMURB,SHLCVT,                    \
+          SIMISCCP,SNOALB_ANL,SNOWMELT,STCOND,STOMATE,STRATOS,     \
+          TAUFAC,TDIAGLIM,TS_FLXIR,TSCONFC,TRIGLAT,TYPSOL,Z0DIR,   \
+          Z0MIN2,Z0TLAT,ZTA,ZUA
+!
+      NAMELIST /PHYSICS_CFGS_p/                                    \
+          ADVECTKE,AGREGAT,AS2,BETA2,BKGALB,CHAUF,CONVEC,          \
+          CORTM,DBGMEM,DIFFUW,DRAG,DRYLAPS,DZSEDI,ETRMIN2,         \
+          EVAP,FACDIFV,FACTDT,FLUVERT,FOMIC,GWDRAG,HC2,HF2,HM2,    \
+          ICELAC,ICEMELT,IHEATCAL,IMPFLX,INILWC,KFCDEPTH,KFCDET,   \
+          KFCDLEV,KFCMOM,KFCPCP,KFCRAD,KFCTIMEA,KFCTIMEC,          \
+          KFCTRIG4,KFCTRIGA,KFCTRIGL,KFCTRIGLAT,KKL2,KNTRAD,       \
+          KTICEFRAC,LIMSNODP,                                      \
+          LMETOX,LONGMEL,MOYHR,MY_CCNTYPE,MY_DBLMOM_C,             \
+          MY_DBLMOM_G,MY_DBLMOM_H,MY_DBLMOM_I,MY_DBLMOM_R,         \
+          MY_DBLMOM_S,MY_DIAGON,MY_DZSEDI,MY_FULL_VERSION,MY_ICEON,\
+          MY_INITN,MY_RAINON,MY_SEDION,MY_SNOWON,MY_WARMON,MOYHR,  \
+          NON_ORO,NSLOFLUX,OWFLUX,                                 \
+          PARSOL,PCPTYPE,PHY_PCK_VERSION,                          \
+          QCFC11,QCFC12,QCH4,QCO2,QN2O,RADFILES,RADFIX,RADFLTR,    \
+          RADIA,RADSLOPE,                                          \
+          RMSCON,SATUCO,SCHMSOL,SCHMURB,SHLCVT,                    \
+          SIMISCCP,SNOALB_ANL,SNOWMELT,STCOND,STOMATE,STRATOS,     \
+          TAUFAC,TDIAGLIM,TS_FLXIR,TSCONFC,TRIGLAT,TYPSOL,Z0DIR,   \
+          Z0MIN2,Z0TLAT,ZTA,ZUA
+!
+      NAMELIST /PHYSICS_2/                                         \
+          AGREGAT,CHAUF,CONVEC,DRAG,EVAP,FLUVERT,ICEMELT,INILWC,   \
+          KFCDEPTH,KFCDET,KFCDLEV,KFCMOM,KFCRAD,KFCTIMEA,KFCTIMEC, \
+          KFCTRIG4,KFCTRIGA,KTICEFRAC,LONGMEL,SATUCO,SCHMSOL,      \
+          SHLCVT,SNOWMELT,STCOND,STOMATE,TYPSOL
+!
+!
+      NAMELIST /PHYSICS_SIMPLIFIED/                                \
+          LIN_KPH,LIN_LSC,LIN_PBL,LIN_SGO
+!
